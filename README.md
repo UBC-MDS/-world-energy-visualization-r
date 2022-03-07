@@ -1,1 +1,1 @@
-# -world-energy-visualization-r
+# world-energy-visualization-r
