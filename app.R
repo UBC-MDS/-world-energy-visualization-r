@@ -1,7 +1,7 @@
 library(dash)
 library(dashBootstrapComponents)
 library(dashHtmlComponents)
-library(dashCoreComponents)
+# library(dashCoreComponents)
 library(plotly)
 library(purrr)
 library(tidyverse)
