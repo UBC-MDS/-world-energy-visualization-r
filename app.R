@@ -18,7 +18,7 @@ app$title("World Energy Visualization")
 df <- read.csv("data/Primary-energy-consumption-from-fossilfuels-nuclear-renewables.csv") #%>% drop_na()
 #df <- na.omit(head(df))
 df_na <- df %>% filter(Code != "") %>% pivot_longer(c(Fossil, Renewables, Nuclear), names_to="energy_type", values_to="percentage")
-print(head(df_na))
+
 
 year_range <- seq(min(df$Year), max(df$Year), 5)
 year_range <- setNames(as.list(as.character(year_range)), as.integer(year_range))
@@ -204,12 +204,13 @@ app$callback(
             y=reorder(Entity, -percentage),
            fill=percentage)) + 
     geom_bar(stat='identity') +
-    geom_text(aes(label = round(percentage, 1)), hjust = "left", colour = "black") +
+    geom_text(aes(label = round(percentage, 1)), colour = "black") +
     labs(x="Percentage %",
      y="Country") + 
     scale_fill_distiller(palette= "Greens", 
     limits = c(0, 100)) + 
-    scale_x_continuous(expand = c(0, 0), limits = c(0, 100))
+    scale_x_continuous(expand = c(0, 0), limits = c(0, 102)) + 
+    theme(legend.position="none")
 
     if (top_bot == "Top"){
        bar_chart <- bar_chart + ggtitle(paste0("Top ", topN, " ", energy, " Energy Consumers in ", year))
@@ -219,7 +220,7 @@ app$callback(
       bar_chart <- bar_chart + ggtitle(paste0("Bottom ", topN, " ", energy, " Energy Consumers in ", year))
     }
     
-    ggplotly(bar_chart) %>% style(text = df_fil$percentage, textposition = "inside")
+    ggplotly(bar_chart)
 
     }
 
