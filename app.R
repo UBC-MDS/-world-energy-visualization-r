@@ -1,10 +1,11 @@
 library(dash)
 library(dashBootstrapComponents)
+library(dashCoreComponents)
 library(dashHtmlComponents)
 library(plotly)
 library(purrr)
 library(dplyr)
-library(tidyverse)
+#library(tidyverse)
 
 app <- Dash$new(external_stylesheets = dbcThemes$BOOTSTRAP)
 app$title("World Energy Visualization")
@@ -12,8 +13,8 @@ app$title("World Energy Visualization")
 # ==============================================================================
 #                            Data wrangling
 # ==============================================================================
-df <- read.csv("data/Primary-energy-consumption-from-fossilfuels-nuclear-renewables.csv") %>%
-       drop_na()
+df <- read.csv("data/Primary-energy-consumption-from-fossilfuels-nuclear-renewables.csv") #%>% drop_na()
+df <- na.omit(df)
 
 year_range <- seq(min(df$Year), max(df$Year), 5)
 year_range <- setNames(as.list(as.character(year_range)), as.integer(year_range))
@@ -22,14 +23,18 @@ year_range <- setNames(as.list(as.character(year_range)), as.integer(year_range)
 # ==============================================================================
 #                            Styles
 # ==============================================================================
-sidebar_style = list("max-width" = "25%", 
-					  "background-image" = "url(/assets/wind-energy.jpg)")
+sidebar_style3 = list(#"max-width" = "25%", 
+					  "background-image" = "url(/assets/wind-energy.jpg)",
+					  "bottom" = 0,
+					  "top" = 0,
+					  "display" = "none"
+					  )
 
 
 # ==============================================================================
 #                            Tab 1: Layout for sidebar
 # ==============================================================================
-sidebar1 <- dbcCol(
+sidebar1 <- div(
     list(
         htmlH3("World Energy Visualisation"),
         htmlBr(),
@@ -59,8 +64,7 @@ sidebar1 <- dbcCol(
         dbcRow(
             dccMarkdown("Datasets for visualization of energy trends were downloaded from [here](https://www.kaggle.com/donjoeml/energy-consumption-and-generation-in-the-globe)")
         )
-    ),
-    style = sidebar_style
+    )
 )
 
 # ==============================================================================
@@ -182,64 +186,63 @@ app$callback(
 #                            Tab 2: Layout for sidebar2
 # ==============================================================================
 
-sidebar2 <- dbcCol(list(
-    htmlH3("World Energy Visualisation"),
-    htmlBr(),
-	
-    htmlH5(
-        "Country",
-        style = list("width" = "80%", "display" = "inline-block"),
-    ),
-    htmlP("Select a country to visualize its trend:", style = list("color" = "#686868", "margin" = 0, "font-size" = "14px")),
-    dbcCol(
-        dccDropdown(
-            id = "tab2-country-dropdown",
-            options = list(
-                list(label = "New York City", value = "NYC"),
-                list(label = "Montreal", value = "MTL"),
-                list(label = "San Francisco", value = "SF")
-            ),
-            value = "MTL"
+sidebar2 <- div(
+    list(
+        htmlH3("World Energy Visualisation"),
+        htmlBr(),
+        htmlH5(
+            "Country",
+            style = list("width" = "80%", "display" = "inline-block"),
         ),
-        style = list("margin-left" = 10),
-    ),
-    htmlBr(),
-    htmlH5(
-        "Region",
-        style = list("width" = "80%", "display" = "inline-block"),
-    ),
-    htmlP("Select regions to compare with the country:", style = list("color" = "#686868", "margin" = 0, "font-size" = "14px")),
-    dbcCol(
-        dccDropdown(
-            id = "tab2-region-dropdown",
-            options = list(
-                list(label = "New York City", value = "NYC"),
-                list(label = "Montreal", value = "MTL"),
-                list(label = "San Francisco", value = "SF")
-            ),
-            value = "MTL"
-        ),
-        style = list("margin-left" = 10)
-    ),
-    htmlBr(),
-    dbcRow(
-        list(
-            htmlH5(
-                "Show World Trend",
-                style = list("width" = "80%", "display" = "inline-block")
-            ),
-            dccChecklist(
+        htmlP("Select a country to visualize its trend:", style = list("color" = "#686868", "margin" = 0, "font-size" = "14px")),
+        dbcCol(
+            dccDropdown(
+                id = "tab2-country-dropdown",
                 options = list(
-                    list(label = "", value = 1)
+                    list(label = "giraffes", value = "giraffes"),
+                    list(label = "orangutans", value = "orangutans"),
+                    list(label = "monkeys", value = "monkeys")
                 ),
-                value = list(1),
-                id = "tab2-world-toggle"
-            )
+                value = "giraffes"
+            ),
+            style = list("margin-left" = 10),
         ),
-        style = list("margin-left" = 10)
+        htmlBr(),
+        htmlH5(
+            "Region",
+            style = list("width" = "80%", "display" = "inline-block"),
+        ),
+        htmlP("Select regions to compare with the country:", style = list("color" = "#686868", "margin" = 0, "font-size" = "14px")),
+        dbcCol(
+            dccDropdown(
+                id = "tab2-region-dropdown",
+                options = list(
+                    list(label = "New York City", value = "NYC"),
+                    list(label = "Montreal", value = "MTL"),
+                    list(label = "San Francisco", value = "SF")
+                ),
+                value = "MTL"
+            ),
+            style = list("margin-left" = 10)
+        ),
+        htmlBr(),
+        dbcRow(
+            list(
+                htmlH5(
+                    "Show World Trend",
+                    style = list("width" = "80%", "display" = "inline-block")
+                ),
+                dccChecklist(
+                    options = list(
+                        list(label = "", value = 1)
+                    ),
+                    value = list(1),
+                    id = "tab2-world-toggle"
+                )
+            ),
+            style = list("margin-left" = 10)
+        )
     )
-),
-style = sidebar_style
 )
 
 # ==============================================================================
@@ -281,7 +284,7 @@ app$callback(
     ),
     function(country, region, toggle, years) {
         fig <- plot_ly(
-            x = c("giraffes", "orangutans", "monkeys"),
+            x = country,
             y = c(20, 14, 23),
             name = "SF Zoo",
             type = "bar"
@@ -324,21 +327,104 @@ app$callback(
     }
 )
 
+
+
+# ==============================================================================
+#                       Tab 3 - A placeholder
+# ==============================================================================
+
+sidebar3 <- dbcCol(
+    list(
+        dccDropdown(
+            id = "tab2-country-dropdown",
+            options = list(
+                list(label = "Location1", value = "L1")
+            ),
+            value = "L1"
+        ),
+        dccDropdown(
+                id = "tab2-region-dropdown",
+                options = list(
+                    list(label = "Location1", value = "L1")
+                ),
+                value = "L1"
+            ),
+        dccChecklist(
+            options = list(
+                list(label = "", value = 1)
+            ),
+            value = list(1),
+            id = "tab2-world-toggle"
+        )
+    ),
+    style = sidebar_style3
+)
+
 # ==============================================================================
 #                            Main skeleton of the app
 # ==============================================================================
-app$layout(htmlDiv(list(
-  dccTabs(id="tabs", children=list(
-    dccTab(label='Global Distribution', 
-	children=list(
-        dbcRow(list(sidebar1,tab1_plots))
-      )),
-    dccTab(label='Historical trends', 
-	children=list(
-        dbcRow(list(sidebar2,tab2_lineplots))
-      ))
-    ))
-  )))
+app$layout(
+    dbcContainer(
+        dbcRow(
+            list(
+                dbcCol(
+                    list(
+                        dbcRow(
+                            id="sidebar1",
+                            sidebar1
+                        ),
+                        dbcRow(
+                            id="sidebar3", #Placeholder
+                            sidebar3,
+                        )
+                    ),
+                       md=2,
+                       style=list(
+                           "background-image" = "url(/assets/wind-energy.jpg)"
+                           )
+                       ),
+                dbcCol(
+                    list(
+                        dbcRow(
+                            list(
+                                dbcTabs(
+                                    id="tabs",
+                                    list(
+                                        dbcTab(
+                                            tab1_plots,
+                                            label = "Global Distribution",
+                                            tab_id = "tab-1"
+                                        ),
+                                        dbcTab(
+                                            tab2_lineplots,
+                                            label="Historical trends",
+                                            tab_id = "tab-2"
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    ),
+                    md=10
+                )
+            )
+        ),
+        fluid=TRUE
+    )
+)
+
+app$callback(
+    output( id="sidebar1", "children"),
+    list(input("tabs", "active_tab")),
+    function(at) {
+        if (at == "tab-1") {
+            return(sidebar1)
+        } else if (at == "tab-2") {
+            return(sidebar2)
+        }
+    }
+)
+
 
 app$run_server(debug = T) # Temporary for local development, delete this string when app will be deployed in heroku
 # app$run_server(host = '0.0.0.0')
