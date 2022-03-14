@@ -18,7 +18,7 @@ app$title("World Energy Visualization")
 df <- read.csv("data/Primary-energy-consumption-from-fossilfuels-nuclear-renewables.csv") #%>% drop_na()
 #df <- na.omit(head(df))
 df_na <- df %>% filter(Code != "") %>% pivot_longer(c(Fossil, Renewables, Nuclear), names_to="energy_type", values_to="percentage")
-#print(df_na)
+print(head(df_na))
 
 year_range <- seq(min(df$Year), max(df$Year), 5)
 year_range <- setNames(as.list(as.character(year_range)), as.integer(year_range))
@@ -55,7 +55,7 @@ sidebar1 <- div(
                 options = df %>%
                     select(Fossil, Nuclear, Renewables) %>%
                     colnames() %>%
-                    purrr::map(function(col) list(label = col, value = col)),
+                    purrr::map(function(col) list(label = col, value = toString(col))),
                 value = "Fossil"
             ),
             style = list("padding" = 10)
@@ -112,7 +112,11 @@ tab1_plots <- dbcCol(
                             min = 0,
                             max = 10,
                             step = 1,
-                            type = "number"
+                            value=10,
+                            type = "number",
+                            debounce=T,
+                            required=T,
+                            minlength=1
                         )
                     )
                 ),
@@ -126,10 +130,10 @@ tab1_plots <- dbcCol(
                         dccRadioItems(
                             id = "tab1_top_bot",
                             options = list(
-                                list("label" = "Top", "value" = 1),
-                                list("label" = "Bottom", "value" = 2)
-                            ),
-                            value = 1,
+                                list("label" = "Top", "value" = "Top"), 
+                                list("label" = "Bottom", "value" = "Bottom")
+                                ),
+                            value="Top",
                             labelStyle = list("margin-right" = "15px"),
                             inputStyle = list("margin-right" = "5px")
                         )
@@ -179,28 +183,28 @@ app$callback(
     ),
 
 
-    function(energy_type, year, topN, top_bot) {
+    function(energy, year, topN, top_bot, df=df_na) {
 
 
     if (top_bot == "Top"){
-        df <- df %>% filter(
-            Year == year) %>% arrange(desc(energy_type)) %>% slice_max(order_by=energy_type, n=topN)
+        df_fil <- df %>% filter(
+            Year == year & energy_type == energy) %>% arrange(desc(percentage)) %>% slice_max(order_by=percentage, n=topN)
 
     } else if (top_bot == "Bottom") {
         
-       df <- df %>% filter(
-            Year == year) %>% arrange(desc(energy_type)) %>% slice_min(order_by=energy_type, n=topN, with_ties=F)
+       df_fil <- df %>% filter(
+            Year == year & energy_type == energy) %>% arrange(desc(percentage)) %>% slice_min(order_by=percentage, n=topN, with_ties=F)
 
         }
     
 
     bar_chart <- ggplot(
-        df,
-        aes(x=energy_type,
-            y=reorder(Entity, -energy_type),
-           fill=energy_type)) + 
+        df_fil,
+        aes(x=percentage,
+            y=reorder(Entity, -percentage),
+           fill=percentage)) + 
     geom_bar(stat='identity') +
-    geom_text(aes(label = round(energy_type, 1)), hjust = 0.5, colour = "black") +
+    geom_text(aes(label = round(percentage, 1)), hjust = "left", colour = "black") +
     labs(x="Percentage %",
      y="Country") + 
     scale_fill_distiller(palette= "Greens", 
@@ -208,14 +212,14 @@ app$callback(
     scale_x_continuous(expand = c(0, 0), limits = c(0, 100))
 
     if (top_bot == "Top"){
-       bar_chart <- bar_chart + ggtitle(paste0("Top ", topN, " ", energy_type, " Energy Consumers in ", year))
+       bar_chart <- bar_chart + ggtitle(paste0("Top ", topN, " ", energy, " Energy Consumers in ", year))
 
     } else if (top_bot == "Bottom"){
         
-      bar_chart <- bar_chart + ggtitle(paste0("Bottom ", topN, " ", energy_type, " Energy Consumers in ", year))
+      bar_chart <- bar_chart + ggtitle(paste0("Bottom ", topN, " ", energy, " Energy Consumers in ", year))
     }
     
-    ggplotly(bar_chart)
+    ggplotly(bar_chart) %>% style(text = df_fil$percentage, textposition = "inside")
 
     }
 
