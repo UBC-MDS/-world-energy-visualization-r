@@ -5,7 +5,6 @@ library(dashHtmlComponents)
 library(plotly)
 library(purrr)
 library(dplyr)
-#library(tidyverse)
 
 app <- Dash$new(external_stylesheets = dbcThemes$BOOTSTRAP)
 app$title("World Energy Visualization")
@@ -426,7 +425,7 @@ app$callback(
 )
 
 
-app$run_server(debug = T) # Temporary for local development, delete this string when app will be deployed in heroku
+app$run_server(host = '0.0.0.0', debug = T) # Temporary for local development, delete this string when app will be deployed in heroku
 # app$run_server(host = '0.0.0.0')
 
 
