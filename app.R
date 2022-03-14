@@ -1,22 +1,29 @@
 library(dash)
 library(dashBootstrapComponents)
 library(dashHtmlComponents)
-# library(dashCoreComponents)
 library(plotly)
 library(purrr)
+library(dplyr)
 library(tidyverse)
+
+app <- Dash$new(external_stylesheets = dbcThemes$BOOTSTRAP)
+app$title("World Energy Visualization")
 
 # ==============================================================================
 #                            Data wrangling
 # ==============================================================================
 df <- read.csv("data/Primary-energy-consumption-from-fossilfuels-nuclear-renewables.csv") %>%
-    drop_na()
+       drop_na()
 
 year_range <- seq(min(df$Year), max(df$Year), 5)
 year_range <- setNames(as.list(as.character(year_range)), as.integer(year_range))
 
-app <- Dash$new(external_stylesheets = dbcThemes$BOOTSTRAP)
-app$title("World Energy Visualization")
+
+# ==============================================================================
+#                            Styles
+# ==============================================================================
+sidebar_style = list("max-width" = "25%", 
+					  "background-image" = "url(/assets/wind-energy.jpg)")
 
 
 # ==============================================================================
@@ -25,9 +32,6 @@ app$title("World Energy Visualization")
 sidebar1 <- dbcCol(
     list(
         htmlH3("World Energy Visualisation"),
-        htmlH4("Global Distribution",
-            style = list("color" = "#686868")
-        ),
         htmlBr(),
         htmlH5(
             "Energy type",
@@ -56,9 +60,8 @@ sidebar1 <- dbcCol(
             dccMarkdown("Datasets for visualization of energy trends were downloaded from [here](https://www.kaggle.com/donjoeml/energy-consumption-and-generation-in-the-globe)")
         )
     ),
-    style = list("max-width" = "20%", "background-image" = "url(/assets/wind-energy.jpg)")
+    style = sidebar_style
 )
-
 
 # ==============================================================================
 #                            Tab 1: Layout for plots
@@ -70,18 +73,16 @@ tab1_plots <- dbcCol(
             style = list("color" = "#888888"),
         ),
         dccGraph(id = "tab1-map"),
-        dccSlider(
-            id = "tab1-year-slider",
-            min = min(df$Year),
-            max = max(df$Year),
-            step = 1,
-            value = max(df$Year),
-            marks = year_range,
-            tooltip = list(
-                always_visible = TRUE,
-                placement = "top"
-            )
-        ),
+		dccSlider(
+			id = "tab1-year-slider",
+			min = min(df$Year),
+			max = max(df$Year),
+			step = 1,
+			value = max(df$Year),
+			marks = year_range,
+			tooltip = list(always_visible = TRUE, placement = "top") 
+		),
+		
         htmlBr(),
         htmlH4("Top/Bottom energy consumer nations"),
         htmlP(
@@ -117,9 +118,8 @@ tab1_plots <- dbcCol(
                         dccRadioItems(
                             id = "tab1_top_bot",
                             options = list(
-                                list("label" = "World", "value" = 1),
-                                list("label" = "Regions", "value" = 2),
-                                list("label" = "Countries", "value" = 3)
+                                list("label" = "Top", "value" = 1),
+                                list("label" = "Bottom", "value" = 2)
                             ),
                             value = 1,
                             labelStyle = list("margin-right" = "15px"),
@@ -144,19 +144,17 @@ app$callback(
         input("tab1-energy-type-dropdown", "value"),
         input("tab1-year-slider", "value")
     ),
-    function(xcol, year) {
-        df <- df %>% filter(Year == year)
+    function(energy_type, year) {
+        df <- df %>% 
+		       filter(Year == year)
         p <- plot_ly(df,
             type = "choropleth",
             locations = df$Code,
-            z = df[, xcol],
+            z = df[, energy_type],
             text = df$Entity,
             colorscale = "Greens"
-        ) %>%
-            layout(
-                title = paste("Global", toString(xcol), "Consumption")
-            )
-        ggplotly(p)
+        ) %>% 
+		layout(title = paste("Global", toString(energy_type), "Consumption"))
     }
 )
 
@@ -181,16 +179,16 @@ app$callback(
     }
 )
 # ==============================================================================
-#                            Tab 2: Layout for sidebar
+#                            Tab 2: Layout for sidebar2
 # ==============================================================================
 
 sidebar2 <- dbcCol(list(
     htmlH3("World Energy Visualisation"),
-    htmlH4("Historical Trends", style = list("color" = "#686868")),
     htmlBr(),
+	
     htmlH5(
         "Country",
-        style = list("width" = "50%", "display" = "inline-block"),
+        style = list("width" = "80%", "display" = "inline-block"),
     ),
     htmlP("Select a country to visualize its trend:", style = list("color" = "#686868", "margin" = 0, "font-size" = "14px")),
     dbcCol(
@@ -203,13 +201,12 @@ sidebar2 <- dbcCol(list(
             ),
             value = "MTL"
         ),
-        width = 12,
-        style = list("padding" = 10),
+        style = list("margin-left" = 10),
     ),
     htmlBr(),
     htmlH5(
         "Region",
-        style = list("width" = "50%", "display" = "inline-block"),
+        style = list("width" = "80%", "display" = "inline-block"),
     ),
     htmlP("Select regions to compare with the country:", style = list("color" = "#686868", "margin" = 0, "font-size" = "14px")),
     dbcCol(
@@ -222,8 +219,7 @@ sidebar2 <- dbcCol(list(
             ),
             value = "MTL"
         ),
-        width = 12,
-        style = list("padding" = 10)
+        style = list("margin-left" = 10)
     ),
     htmlBr(),
     dbcRow(
@@ -234,45 +230,43 @@ sidebar2 <- dbcCol(list(
             ),
             dccChecklist(
                 options = list(
-                    list(label = "New York City", value = "NYC"),
-                    list(label = "Montreal", value = "MTL"),
-                    list(label = "San Francisco", value = "SF")
+                    list(label = "", value = 1)
                 ),
-                value = list("MTL", "SF"),
+                value = list(1),
                 id = "tab2-world-toggle"
             )
         ),
         style = list("margin-left" = 10)
     )
 ),
-style = list("max-width" = "80%"),
+style = sidebar_style
 )
 
 # ==============================================================================
 #                            Tab 2: Layout for lineplots
 # ==============================================================================
 tab2_lineplots <- dbcCol(list(
-    htmlP(
-        "Select the year range for the below plots:"
-    ),
-    dccRangeSlider(
-        id = "tab2-years-rangeslider",
-        min = 0,
-        max = 20,
-        step = 0.5,
-        value = list(5, 15)
-    ),
-    htmlBr(),
-    dccGraph(id = "tab2-lineplot-fossil"),
-    dccGraph(id = "tab2-lineplot-nuclear"),
-    dccGraph(id = "tab2-lineplot-renewable")
+	htmlDiv(list(
+		htmlP(
+			"Select the year range for the below plots:"
+		),
+		dccRangeSlider(
+            id = "tab2-years-rangeslider",
+            min = min(df$Year),
+            max = max(df$Year),
+            step = 1,
+            value = list(1980, 2010),
+            marks = year_range,
+            tooltip = list(always_visible = TRUE, placement = "top")
+	    )
+	)),
+		
+	htmlBr(),
+	dccGraph(id = "tab2-lineplot-fossil"),
+	dccGraph(id = "tab2-lineplot-nuclear"),
+	dccGraph(id = "tab2-lineplot-renewable")
 ))
 
-tab2_layout <- dbcContainer(list(
-    dbcRow(list(sidebar2, tab2_lineplots))
-),
-style = list("max-width" = "80%")
-)
 
 # ==============================================================================
 #                            Tab 2: Lineplots for trends
@@ -333,23 +327,35 @@ app$callback(
 # ==============================================================================
 #                            Main skeleton of the app
 # ==============================================================================
-app$layout(
-    dbcContainer(
-        dbcRow(
-            list(
-                sidebar1,
-                dbcCol(
-                    list(
-                        dbcTabs(
-                            list(dbcTab(tab1_plots, label = "Map view"), dbcTab(tab2_layout, label = "Trends"))
-                        )
-                    )
-                )
-            )
-        ),
-        style = list("max-width" = "80%")
-    )
-)
+app$layout(htmlDiv(list(
+  dccTabs(id="tabs", children=list(
+    dccTab(label='Global Distribution', 
+	children=list(
+        dbcRow(list(sidebar1,tab1_plots))
+      )),
+    dccTab(label='Historical trends', 
+	children=list(
+        dbcRow(list(sidebar2,tab2_lineplots))
+      ))
+    ))
+  )))
 
 app$run_server(debug = T) # Temporary for local development, delete this string when app will be deployed in heroku
 # app$run_server(host = '0.0.0.0')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
