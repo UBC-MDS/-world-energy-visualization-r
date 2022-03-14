@@ -4,18 +4,25 @@ library(dashHtmlComponents)
 library(plotly)
 library(purrr)
 library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(tidyr)
 
 app <- Dash$new(external_stylesheets = dbcThemes$BOOTSTRAP)
 app$title("World Energy Visualization")
+
 
 # ==============================================================================
 #                            Data wrangling
 # ==============================================================================
 df <- read.csv("data/Primary-energy-consumption-from-fossilfuels-nuclear-renewables.csv") #%>% drop_na()
-df <- na.omit(df)
+#df <- na.omit(head(df))
+df_na <- df %>% filter(Code != "") %>% pivot_longer(c(Fossil, Renewables, Nuclear), names_to="energy_type", values_to="percentage")
+#print(df_na)
 
 year_range <- seq(min(df$Year), max(df$Year), 5)
 year_range <- setNames(as.list(as.character(year_range)), as.integer(year_range))
+
 
 
 # ==============================================================================
@@ -27,7 +34,6 @@ sidebar_style3 = list(#"max-width" = "25%",
 					  "top" = 0,
 					  "display" = "none"
 					  )
-
 
 # ==============================================================================
 #                            Tab 1: Layout for sidebar
@@ -171,14 +177,49 @@ app$callback(
         input("tab1-input-topN", "value"),
         input("tab1_top_bot", "value")
     ),
+
+
     function(energy_type, year, topN, top_bot) {
-        fig <- plot_ly(
-            x = c("giraffes", "orangutans", "monkeys"),
-            y = c(20, 14, 23),
-            name = "SF Zoo",
-            type = "bar"
-        )
+
+
+    if (top_bot == "Top"){
+        df <- df %>% filter(
+            Year == year) %>% arrange(desc(energy_type)) %>% slice_max(order_by=energy_type, n=topN)
+
+    } else if (top_bot == "Bottom") {
+        
+       df <- df %>% filter(
+            Year == year) %>% arrange(desc(energy_type)) %>% slice_min(order_by=energy_type, n=topN, with_ties=F)
+
+        }
+    
+
+    bar_chart <- ggplot(
+        df,
+        aes(x=energy_type,
+            y=reorder(Entity, -energy_type),
+           fill=energy_type)) + 
+    geom_bar(stat='identity') +
+    geom_text(aes(label = round(energy_type, 1)), hjust = 0.5, colour = "black") +
+    labs(x="Percentage %",
+     y="Country") + 
+    scale_fill_distiller(palette= "Greens", 
+    limits = c(0, 100)) + 
+    scale_x_continuous(expand = c(0, 0), limits = c(0, 100))
+
+    if (top_bot == "Top"){
+       bar_chart <- bar_chart + ggtitle(paste0("Top ", topN, " ", energy_type, " Energy Consumers in ", year))
+
+    } else if (top_bot == "Bottom"){
+        
+      bar_chart <- bar_chart + ggtitle(paste0("Bottom ", topN, " ", energy_type, " Energy Consumers in ", year))
     }
+    
+    ggplotly(bar_chart)
+
+    }
+
+    
 )
 # ==============================================================================
 #                            Tab 2: Layout for sidebar2
