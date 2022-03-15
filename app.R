@@ -17,11 +17,24 @@ df <- na.omit(df)
 year_range <- seq(min(df$Year), max(df$Year), 5)
 year_range <- setNames(as.list(as.character(year_range)), as.integer(year_range))
 
+all_country <- df %>%
+  filter(Code != "" & Entity != "World") %>%
+  pull(Entity) %>%
+  unique()
+
+all_continent <- df %>%
+  filter(Code == "") %>%
+  pull(Entity) %>%
+  unique()
+
+
+all_years <- df$Year %>%
+  unique()
 
 # ==============================================================================
 #                            Styles
 # ==============================================================================
-sidebar_style3 = list(#"max-width" = "25%", 
+sidebar_style3 = list(#"max-width" = "25%",
 					  "background-image" = "url(/assets/wind-energy.jpg)",
 					  "bottom" = 0,
 					  "top" = 0,
@@ -82,9 +95,9 @@ tab1_plots <- dbcCol(
 			step = 1,
 			value = max(df$Year),
 			marks = year_range,
-			tooltip = list(always_visible = TRUE, placement = "top") 
+			tooltip = list(always_visible = TRUE, placement = "top")
 		),
-		
+
         htmlBr(),
         htmlH4("Top/Bottom energy consumer nations"),
         htmlP(
@@ -147,7 +160,7 @@ app$callback(
         input("tab1-year-slider", "value")
     ),
     function(energy_type, year) {
-        df <- df %>% 
+        df <- df %>%
 		       filter(Year == year)
         p <- plot_ly(df,
             type = "choropleth",
@@ -155,7 +168,7 @@ app$callback(
             z = df[, energy_type],
             text = df$Entity,
             colorscale = "Greens"
-        ) %>% 
+        ) %>%
 		layout(title = paste("Global", toString(energy_type), "Consumption"))
     }
 )
@@ -184,145 +197,136 @@ app$callback(
 #                            Tab 2: Layout for sidebar2
 # ==============================================================================
 
-sidebar2 <- div(
-    list(
-        htmlH3("World Energy Visualisation"),
-        htmlBr(),
-        htmlH5(
-            "Country",
-            style = list("width" = "80%", "display" = "inline-block"),
-        ),
-        htmlP("Select a country to visualize its trend:", style = list("color" = "#686868", "margin" = 0, "font-size" = "14px")),
-        dbcCol(
-            dccDropdown(
-                id = "tab2-country-dropdown",
-                options = list(
-                    list(label = "giraffes", value = "giraffes"),
-                    list(label = "orangutans", value = "orangutans"),
-                    list(label = "monkeys", value = "monkeys")
-                ),
-                value = "giraffes"
-            ),
-            style = list("margin-left" = 10),
-        ),
-        htmlBr(),
-        htmlH5(
-            "Region",
-            style = list("width" = "80%", "display" = "inline-block"),
-        ),
-        htmlP("Select regions to compare with the country:", style = list("color" = "#686868", "margin" = 0, "font-size" = "14px")),
-        dbcCol(
-            dccDropdown(
-                id = "tab2-region-dropdown",
-                options = list(
-                    list(label = "New York City", value = "NYC"),
-                    list(label = "Montreal", value = "MTL"),
-                    list(label = "San Francisco", value = "SF")
-                ),
-                value = "MTL"
-            ),
-            style = list("margin-left" = 10)
-        ),
-        htmlBr(),
-        dbcRow(
-            list(
-                htmlH5(
-                    "Show World Trend",
-                    style = list("width" = "80%", "display" = "inline-block")
-                ),
-                dccChecklist(
-                    options = list(
-                        list(label = "", value = 1)
-                    ),
-                    value = list(1),
-                    id = "tab2-world-toggle"
-                )
-            ),
-            style = list("margin-left" = 10)
-        )
-    )
-)
+sidebar2 <- dbcCol(list(
+  html$h3("World Energy Visualisation"),
+  html$h4("Historical Trends", style = list("color" = "#686868")),
+  html$br(),
+  html$h5("Country", style = list("width" = "50%", "display" = "inline-block")),
+  html$p("Select a country to visualize its trend:", style=list("color" = "#686868", "margin" = 0, "font-size" = "14px")),
+  dccDropdown(id = "tab2-country-dropdown", options = all_country, value = "Canada"),
+  html$br(),
+  html$h5("Region", style = list("width" = "50%", "display" = "inline-block")),
+  html$p("Select regions to compare with the country:", style=list("color" = "#686868", "margin" = 0, "font-size" = "14px")),
+  dccDropdown(id = "tab2-region-dropdown", options = all_continent, value = "North America", multi = TRUE),
+  html$br(),
+  dbcRow(list(
+    html$h5("Show World Trend", style = list("width" = "80%", "display" = "inline-block")),
+    dbcChecklist(options = list(list("label" = "", "value" = 1)), value = list(1), id = "tab2-world-toggle", switch = TRUE)
+  ))
+))
 
 # ==============================================================================
 #                            Tab 2: Layout for lineplots
 # ==============================================================================
+slider_marks <- list()
+show_years <- all_years[c(seq(1, length(all_years), 5), length(all_years))]
+for (y in show_years){
+  slider_marks[as.character(y)] = as.character(y)
+}
+
+tabStyle = list(
+  "position"="fixed",
+  "top"= 0,
+  "right"= 20,
+  "bottom"= 0,
+  "padding"= "3vh 3vw",
+  "overflow-y"= "scroll"
+)
+
 tab2_lineplots <- dbcCol(list(
-	htmlDiv(list(
-		htmlP(
-			"Select the year range for the below plots:"
-		),
-		dccRangeSlider(
-            id = "tab2-years-rangeslider",
-            min = min(df$Year),
-            max = max(df$Year),
-            step = 1,
-            value = list(1980, 2010),
-            marks = year_range,
-            tooltip = list(always_visible = TRUE, placement = "top")
-	    )
-	)),
-		
-	htmlBr(),
-	dccGraph(id = "tab2-lineplot-fossil"),
-	dccGraph(id = "tab2-lineplot-nuclear"),
-	dccGraph(id = "tab2-lineplot-renewable")
-))
+  html$div(list(
+    html$p("Select the year range for the below plots:", style = list("color" = "#888888")),
+    dccRangeSlider(min = min(all_years), max = max(all_years), step = 1,
+                   value = c(min(all_years), max(all_years)),
+                   tooltip = list("placement" = "top", "always_visible" = FALSE),
+                   marks = slider_marks,
+                   id = "tab2-year-slider"),
+    dccGraph(id = "tab2-lineplot-fossil"),
+    dccGraph(id = "tab2-lineplot-nuclear"),
+    dccGraph(id = "tab2-lineplot-renewable")
+  ), style = list("padding-top" = "30px"))
+), md = 10)
 
 
 # ==============================================================================
 #                            Tab 2: Lineplots for trends
 # ==============================================================================
 app$callback(
-    output("tab2-lineplot-fossil", "figure"),
-    list(
-        input("tab2-country-dropdown", "value"),
-        input("tab2-region-dropdown", "value"),
-        input("tab2-world-toggle", "value"),
-        input("tab2-years-rangeslider", "value")
-    ),
-    function(country, region, toggle, years) {
-        fig <- plot_ly(
-            x = country,
-            y = c(20, 14, 23),
-            name = "SF Zoo",
-            type = "bar"
-        )
+  output("tab2-lineplot-fossil", "figure"),
+  list(
+    input("tab2-country-dropdown", "value"),
+    input("tab2-region-dropdown", "value"),
+    input("tab2-world-toggle", "value"),
+    input("tab2-year-slider", "value")
+  ),
+  function(country, region, toggle, years){
+    entity_vec <- c(country, region %>% as.character())
+    if (length(toggle) > 0) {
+      entity_vec <- c(entity_vec, "World")
     }
+
+    data_use <- df %>%
+      filter(Entity %in% entity_vec & Year >= years[1] & Year <= years[2])
+
+    graph <- ggplot(data_use, aes(x = Year, y = Fossil, color = Entity)) +
+      geom_line() +
+      labs(title = paste("Fossil fuels usage from", years[1], "to", years[2]),
+           y = "Fossil fuel Usage (%)")
+
+    ggplotly(graph)
+  }
 )
 
 app$callback(
-    output("tab2-lineplot-nuclear", "figure"),
-    list(
-        input("tab2-country-dropdown", "value"),
-        input("tab2-region-dropdown", "value"),
-        input("tab2-world-toggle", "value"),
-        input("tab2-years-rangeslider", "value")
-    ),
-    function(country, region, toggle, years) {
-        fig <- plot_ly(
-            x = c("giraffes", "orangutans", "monkeys"),
-            y = c(20, 14, 23),
-            name = "SF Zoo",
-            type = "bar"
-        )
+  output("tab2-lineplot-nuclear", "figure"),
+  list(
+    input("tab2-country-dropdown", "value"),
+    input("tab2-region-dropdown", "value"),
+    input("tab2-world-toggle", "value"),
+    input("tab2-year-slider", "value")
+  ),
+  function(country, region, toggle, years){
+    entity_vec <- c(country, region %>% as.character())
+    if (length(toggle) > 0) {
+      entity_vec <- c(entity_vec, "World")
     }
+
+    data_use <- df %>%
+      filter(Entity %in% entity_vec & Year >= years[1] & Year <= years[2])
+
+    graph <- ggplot(data_use, aes(x = Year, y = Nuclear, color = Entity)) +
+      geom_line() +
+      labs(title = paste("Nuclear energy usage from", years[1], "to", years[2]),
+           y = "Nuclear energy Usage (%)")
+
+    ggplotly(graph)
+  }
 )
+
 app$callback(
-    output("tab2-lineplot-renewable", "figure"),
-    list(
-        input("tab2-country-dropdown", "value"),
-        input("tab2-region-dropdown", "value"),
-        input("tab2-world-toggle", "value"),
-        input("tab2-years-rangeslider", "value")
-    ),
-    function(country, region, toggle, years) {
-        fig <- plot_ly(
-            x = c("giraffes", "orangutans", "monkeys"),
-            y = c(20, 14, 23),
-            name = "SF Zoo",
-            type = "bar"
-        )
+  output("tab2-lineplot-renewable", "figure"),
+  list(
+    input("tab2-country-dropdown", "value"),
+    input("tab2-region-dropdown", "value"),
+    input("tab2-world-toggle", "value"),
+    input("tab2-year-slider", "value")
+  ),
+  function(country, region, toggle, years){
+    entity_vec <- c(country, region %>% as.character())
+    if (length(toggle) > 0) {
+      entity_vec <- c(entity_vec, "World")
     }
+
+    data_use <- df %>%
+      filter(Entity %in% entity_vec & Year >= years[1] & Year <= years[2])
+
+    graph <- ggplot(data_use, aes(x = Year, y = Renewables, color = Entity)) +
+      geom_line() +
+      labs(title = paste("Renewable energy usage from", years[1], "to", years[2]),
+           y = "Renewable energy Usage (%)")
+
+    ggplotly(graph)
+  }
 )
 
 
@@ -424,7 +428,7 @@ app$callback(
 )
 
 
-app$run_server(host = '0.0.0.0', debug = T) # Temporary for local development, delete this string when app will be deployed in heroku
+app$run_server(host = '0.0.0.0', debug = F) # Temporary for local development, delete this string when app will be deployed in heroku
 # app$run_server(host = '0.0.0.0')
 
 
