@@ -198,7 +198,8 @@ app$callback(
             locations = df$Code,
             z = df[, energy_type],
             text = df$Entity,
-            colorscale = "Greens"
+            colorscale = "Greens",
+            reversescale = TRUE
         ) %>%
 		layout(title = paste("Global", toString(energy_type), "Energy Consumption in", toString(year)))
     }
