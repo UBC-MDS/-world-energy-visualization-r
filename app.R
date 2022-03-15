@@ -4,18 +4,25 @@ library(dashHtmlComponents)
 library(plotly)
 library(purrr)
 library(dplyr)
+library(ggplot2)
+library(RColorBrewer)
+library(tidyr)
 
 app <- Dash$new(external_stylesheets = dbcThemes$BOOTSTRAP)
 app$title("World Energy Visualization")
+
 
 # ==============================================================================
 #                            Data wrangling
 # ==============================================================================
 df <- read.csv("data/Primary-energy-consumption-from-fossilfuels-nuclear-renewables.csv") #%>% drop_na()
-df <- na.omit(df)
+#df <- na.omit(head(df))
+df_na <- df %>% filter(Code != "") %>% pivot_longer(c(Fossil, Renewables, Nuclear), names_to="energy_type", values_to="percentage")
+
 
 year_range <- seq(min(df$Year), max(df$Year), 5)
 year_range <- setNames(as.list(as.character(year_range)), as.integer(year_range))
+
 
 
 # ==============================================================================
@@ -27,7 +34,6 @@ sidebar_style3 = list(#"max-width" = "25%",
 					  "top" = 0,
 					  "display" = "none"
 					  )
-
 
 # ==============================================================================
 #                            Tab 1: Layout for sidebar
@@ -49,7 +55,7 @@ sidebar1 <- div(
                 options = df %>%
                     select(Fossil, Nuclear, Renewables) %>%
                     colnames() %>%
-                    purrr::map(function(col) list(label = col, value = col)),
+                    purrr::map(function(col) list(label = col, value = toString(col))),
                 value = "Fossil"
             ),
             style = list("padding" = 10)
@@ -106,7 +112,11 @@ tab1_plots <- dbcCol(
                             min = 0,
                             max = 10,
                             step = 1,
-                            type = "number"
+                            value=10,
+                            type = "number",
+                            debounce=T,
+                            required=T,
+                            minlength=1
                         )
                     )
                 ),
@@ -120,10 +130,10 @@ tab1_plots <- dbcCol(
                         dccRadioItems(
                             id = "tab1_top_bot",
                             options = list(
-                                list("label" = "Top", "value" = 1),
-                                list("label" = "Bottom", "value" = 2)
-                            ),
-                            value = 1,
+                                list("label" = "Top", "value" = "Top"), 
+                                list("label" = "Bottom", "value" = "Bottom")
+                                ),
+                            value="Top",
                             labelStyle = list("margin-right" = "15px"),
                             inputStyle = list("margin-right" = "5px")
                         )
@@ -171,14 +181,50 @@ app$callback(
         input("tab1-input-topN", "value"),
         input("tab1_top_bot", "value")
     ),
-    function(energy_type, year, topN, top_bot) {
-        fig <- plot_ly(
-            x = c("giraffes", "orangutans", "monkeys"),
-            y = c(20, 14, 23),
-            name = "SF Zoo",
-            type = "bar"
-        )
+
+
+    function(energy, year, topN, top_bot, df=df_na) {
+
+
+    if (top_bot == "Top"){
+        df_fil <- df %>% filter(
+            Year == year & energy_type == energy) %>% arrange(desc(percentage)) %>% slice_max(order_by=percentage, n=topN)
+
+    } else if (top_bot == "Bottom") {
+        
+       df_fil <- df %>% filter(
+            Year == year & energy_type == energy) %>% arrange(desc(percentage)) %>% slice_min(order_by=percentage, n=topN, with_ties=F)
+
+        }
+    
+
+    bar_chart <- ggplot(
+        df_fil,
+        aes(x=percentage,
+            y=reorder(Entity, -percentage),
+           fill=percentage)) + 
+    geom_bar(stat='identity') +
+    geom_text(aes(label = round(percentage, 1)), colour = "black") +
+    labs(x="Percentage %",
+     y="Country") + 
+    scale_fill_distiller(palette= "Greens", 
+    limits = c(0, 100)) + 
+    scale_x_continuous(expand = c(0, 0), limits = c(0, 102)) + 
+    theme(legend.position="none")
+
+    if (top_bot == "Top"){
+       bar_chart <- bar_chart + ggtitle(paste0("Top ", topN, " ", energy, " Energy Consumers in ", year))
+
+    } else if (top_bot == "Bottom"){
+        
+      bar_chart <- bar_chart + ggtitle(paste0("Bottom ", topN, " ", energy, " Energy Consumers in ", year))
     }
+    
+    ggplotly(bar_chart)
+
+    }
+
+    
 )
 # ==============================================================================
 #                            Tab 2: Layout for sidebar2
