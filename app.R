@@ -41,6 +41,17 @@ all_years <- df$Year %>%
 # ==============================================================================
 #                            Styles
 # ==============================================================================
+sidebarStyle = list(
+  "position"= "fixed",
+  "top"= 0,
+  "left"= 0,
+  "bottom"= 0,
+  "padding"= "2rem 1rem",
+  "background-image"= "url(/assets/wind-energy.jpg)",
+  "background-color" = "rgba(255, 255, 255, 0.6)",
+  "background-blend-mode" = "overlay"
+)
+
 sidebar_style3 = list(#"max-width" = "25%",
 					  "background-image" = "url(/assets/wind-energy.jpg)",
 					  "bottom" = 0,
@@ -48,12 +59,22 @@ sidebar_style3 = list(#"max-width" = "25%",
 					  "display" = "none"
 					  )
 
+tabStyle = list(
+  "position"="fixed",
+  "top"= 0,
+  "right"= 20,
+  "bottom"= 0,
+  "width" = "80%",
+  "padding"= "2rem 1rem",
+  "overflow-y"= "scroll"
+)
 # ==============================================================================
 #                            Tab 1: Layout for sidebar
 # ==============================================================================
-sidebar1 <- div(
+sidebar1 <- dbcCol(
     list(
         htmlH3("World Energy Visualisation"),
+        html$h4("Global Distribution", style = list("color" = "#686868")),
         htmlBr(),
         htmlH5(
             "Energy type",
@@ -143,7 +164,7 @@ tab1_plots <- dbcCol(
                         dccRadioItems(
                             id = "tab1_top_bot",
                             options = list(
-                                list("label" = "Top", "value" = "Top"), 
+                                list("label" = "Top", "value" = "Top"),
                                 list("label" = "Bottom", "value" = "Bottom")
                                 ),
                             value="Top",
@@ -179,7 +200,7 @@ app$callback(
             text = df$Entity,
             colorscale = "Greens"
         ) %>%
-		layout(title = paste("Global", toString(energy_type), "Consumption"))
+		layout(title = paste("Global", toString(energy_type), "Energy Consumption in", toString(year)))
     }
 )
 
@@ -204,40 +225,40 @@ app$callback(
             Year == year & energy_type == energy) %>% arrange(desc(percentage)) %>% slice_max(order_by=percentage, n=topN)
 
     } else if (top_bot == "Bottom") {
-        
+
        df_fil <- df %>% filter(
             Year == year & energy_type == energy) %>% arrange(desc(percentage)) %>% slice_min(order_by=percentage, n=topN, with_ties=F)
 
         }
-    
+
 
     bar_chart <- ggplot(
         df_fil,
         aes(x=percentage,
             y=reorder(Entity, -percentage),
-           fill=percentage)) + 
+           fill=percentage)) +
     geom_bar(stat='identity') +
     geom_text(aes(label = round(percentage, 1)), colour = "black") +
     labs(x="Percentage %",
-     y="Country") + 
-    scale_fill_distiller(palette= "Greens", 
-    limits = c(0, 100)) + 
-    scale_x_continuous(expand = c(0, 0), limits = c(0, 102)) + 
+     y="Country") +
+    scale_fill_distiller(palette= "Greens",
+    limits = c(0, 100)) +
+    scale_x_continuous(expand = c(0, 0), limits = c(0, 102)) +
     theme(legend.position="none")
 
     if (top_bot == "Top"){
        bar_chart <- bar_chart + ggtitle(paste0("Top ", topN, " ", energy, " Energy Consumers in ", year))
 
     } else if (top_bot == "Bottom"){
-        
+
       bar_chart <- bar_chart + ggtitle(paste0("Bottom ", topN, " ", energy, " Energy Consumers in ", year))
     }
-    
+
     ggplotly(bar_chart)
 
     }
 
-    
+
 )
 # ==============================================================================
 #                            Tab 2: Layout for sidebar2
@@ -270,15 +291,6 @@ for (y in show_years){
   slider_marks[as.character(y)] = as.character(y)
 }
 
-tabStyle = list(
-  "position"="fixed",
-  "top"= 0,
-  "right"= 20,
-  "bottom"= 0,
-  "padding"= "3vh 3vw",
-  "overflow-y"= "scroll"
-)
-
 tab2_lineplots <- dbcCol(list(
   html$div(list(
     html$p("Select the year range for the below plots:", style = list("color" = "#888888")),
@@ -291,7 +303,7 @@ tab2_lineplots <- dbcCol(list(
     dccGraph(id = "tab2-lineplot-nuclear"),
     dccGraph(id = "tab2-lineplot-renewable")
   ), style = list("padding-top" = "30px"))
-), md = 10)
+))
 
 
 # ==============================================================================
@@ -427,9 +439,7 @@ app$layout(
                         )
                     ),
                        md=2,
-                       style=list(
-                           "background-image" = "url(/assets/wind-energy.jpg)"
-                           )
+                       style=sidebarStyle
                        ),
                 dbcCol(
                     list(
@@ -440,12 +450,12 @@ app$layout(
                                     list(
                                         dbcTab(
                                             tab1_plots,
-                                            label = "Global Distribution",
+                                            label = "Map view",
                                             tab_id = "tab-1"
                                         ),
                                         dbcTab(
                                             tab2_lineplots,
-                                            label="Historical trends",
+                                            label="Trends",
                                             tab_id = "tab-2"
                                         )
                                     )
@@ -453,7 +463,8 @@ app$layout(
                             )
                         )
                     ),
-                    md=10
+                    md=10,
+                    style = tabStyle
                 )
             )
         ),
@@ -474,7 +485,7 @@ app$callback(
 )
 
 
-app$run_server(host = '0.0.0.0', debug = F) # Temporary for local development, delete this string when app will be deployed in heroku
+app$run_server(host = '0.0.0.0', debug = T) # Temporary for local development, delete this string when app will be deployed in heroku
 # app$run_server(host = '0.0.0.0')
 
 
