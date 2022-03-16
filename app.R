@@ -37,7 +37,12 @@ all_continent <- df %>%
 all_years <- df$Year %>%
   unique()
 
-
+proj_param <- list(
+  "World" = c(0, 0, 1),
+  "North America" = c(40, -120, 2),
+  "Europe" = c(50, 20, 4),
+  "Africa" = c(0, 20, 2)
+)
 # ==============================================================================
 #                            Styles
 # ==============================================================================
@@ -113,6 +118,17 @@ tab1_plots <- dbcCol(
         htmlP(
             "Drag and select the number of year to view the change of engergy consumption distribution using the slide bar. You can hover or zoom to get the details of a specific region.",
             style = list("color" = "#888888"),
+        ),
+        dbcRow(list(
+          html$div("Map View:", style=list("width"= "fit-content", "padding"= "5px 0")),
+          dbcCol(
+            dccDropdown(
+              id="tab1-map-focus",
+              options = c("World", all_continent),
+              value="World",
+              clearable=F
+            ),
+          )), style=list("width" = "20%", "padding-left" = "10px")
         ),
         dccGraph(id = "tab1-map"),
         html$div(
@@ -191,9 +207,10 @@ app$callback(
     output("tab1-map", "figure"),
     list(
         input("tab1-energy-type-dropdown", "value"),
-        input("tab1-year-slider", "value")
+        input("tab1-year-slider", "value"),
+        input("tab1-map-focus", "value")
     ),
-    function(energy_type, year) {
+    function(energy_type, year, scope) {
         df <- df %>%
 		       filter(Year == year)
 
@@ -209,7 +226,10 @@ app$callback(
             zmax = 100
         ) %>%
 		      layout(title = paste("Global", toString(energy_type), "Energy Consumption in", toString(year)),
-		             geo = list(showcountries = T))
+		             geo = list(showcountries = T,
+		                        center = list("lat" = proj_param[[scope]][1], "lon" = proj_param[[scope]][2]),
+		                        projection = list("scale" = proj_param[[scope]][3])
+		                        ))
     }
 )
 
