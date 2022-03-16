@@ -193,15 +193,20 @@ app$callback(
     function(energy_type, year) {
         df <- df %>%
 		       filter(Year == year)
+
         p <- plot_ly(df,
             type = "choropleth",
             locations = df$Code,
             z = df[, energy_type],
             text = df$Entity,
             colorscale = "Greens",
-            reversescale = TRUE
+            reversescale = TRUE,
+            zauto = FALSE,
+            zmin = 0,
+            zmax = 100
         ) %>%
-		layout(title = paste("Global", toString(energy_type), "Energy Consumption in", toString(year)))
+		      layout(title = paste("Global", toString(energy_type), "Energy Consumption in", toString(year)),
+		             geo = list(showcountries = T))
     }
 )
 
