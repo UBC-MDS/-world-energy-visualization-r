@@ -75,27 +75,18 @@ You are also welcomed to raise new ideas and report any existing bugs. Please go
 
 ### How to install and run locally
 
-To run the dashboard locally, it is recommeded to use a virtual environment like [venv](https://docs.python.org/3/library/venv.html) or [Anaconda](https://www.anaconda.com/). For simplicity, we could demonstrate the installiation process with venv.
-
 #### Set up
 
 Run the following command at the root directory of the project:
 
 ```
-# Create the virtual environment
-python -m venv energy-viz
-
-# Activate the environment
-source energy-viz/bin/activate
-
-# Install the requirements
-pip install -r requirements.txt
+R -f init.R
 ```
 
 #### Run the dashboard
 
 ```
-python src/app.py
+R -f app.R
 ```
 
 The dashboard could then be accessed locally in <localhost:8050>, and you are good to go!
