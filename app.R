@@ -115,15 +115,18 @@ tab1_plots <- dbcCol(
             style = list("color" = "#888888"),
         ),
         dccGraph(id = "tab1-map"),
-		dccSlider(
-			id = "tab1-year-slider",
-			min = min(df$Year),
-			max = max(df$Year),
-			step = 1,
-			value = max(df$Year),
-			marks = year_range,
-			tooltip = list(always_visible = TRUE, placement = "top")
-		),
+        html$div(
+      		dccSlider(
+      			id = "tab1-year-slider",
+      			min = min(df$Year),
+      			max = max(df$Year),
+      			step = 1,
+      			value = max(df$Year),
+      			marks = year_range,
+      			tooltip = list(always_visible = TRUE, placement = "top"),
+      		),
+      		style = list("padding" = "0vh 10vw")
+      	),
 
         htmlBr(),
         htmlH4("Top/Bottom energy consumer nations"),
