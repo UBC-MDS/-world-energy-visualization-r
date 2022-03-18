@@ -81,9 +81,7 @@ sidebar1 <- dbcCol(
         htmlH3("World Energy Visualisation"),
         html$h4("Global Distribution", style = list("color" = "#686868")),
         htmlBr(),
-        htmlH5(
-            "Energy type",
-        ),
+        htmlH5("Energy type"),
         htmlP(
             "Select a energy type for visualization:",
             style = list("color" = "#686868", "margin" = 0, "font-size" = "14px"),
@@ -100,6 +98,19 @@ sidebar1 <- dbcCol(
             style = list("padding" = 10)
         ),
         htmlBr(),
+		
+		htmlH5("Map View"),
+		dbcRow(
+            dccDropdown(
+                id = "tab1-map-focus",
+                options = c("World", all_continent),
+				value="World",
+				clearable=F
+            ),
+            style = list("padding" = 10)
+        ),
+		
+		htmlBr(),
         htmlH5(
             "Data sources",
             style = list("width" = "50%", "display" = "inline-block"),
@@ -119,17 +130,17 @@ tab1_plots <- dbcCol(
             "Drag and select the number of year to view the change of engergy consumption distribution using the slide bar. You can hover or zoom to get the details of a specific region.",
             style = list("color" = "#888888"),
         ),
-        dbcRow(list(
-          html$div("Map View:", style=list("width"= "fit-content", "padding"= "5px 0")),
-          dbcCol(
-            dccDropdown(
-              id="tab1-map-focus",
-              options = c("World", all_continent),
-              value="World",
-              clearable=F
-            ),
-          )), style=list("width" = "20%", "padding-left" = "10px")
-        ),
+        # dbcRow(list(
+          # html$div("Map View:", style=list("width"= "fit-content", "padding"= "5px 0")),
+          # dbcCol(
+            # dccDropdown(
+              # id="tab1-map-focus",
+              # options = c("World", all_continent),
+              # value="World",
+              # clearable=F
+            # ),
+          # )), style=list("width" = "20%", "padding-left" = "10px")
+        # ),
         dccGraph(id = "tab1-map"),
         html$div(
       		dccSlider(
@@ -226,6 +237,7 @@ app$callback(
             zmax = 100
         ) %>%
 		      layout(title = paste("Global", toString(energy_type), "Energy Consumption in", toString(year)),
+			         margin=list("r"=0, "t"=0, "l"=0, "b"=0), 
 		             geo = list(showcountries = T,
 		                        center = list("lat" = proj_param[[scope]][1], "lon" = proj_param[[scope]][2]),
 		                        projection = list("scale" = proj_param[[scope]][3])
