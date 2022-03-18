@@ -57,7 +57,7 @@ sidebarStyle = list(
   "background-blend-mode" = "overlay"
 )
 
-sidebar_style3 = list(#"max-width" = "25%",
+sidebar_style3 = list(
 					  "background-image" = "url(/assets/wind-energy.jpg)",
 					  "bottom" = 0,
 					  "top" = 0,
@@ -324,13 +324,43 @@ tab2_lineplots <- dbcCol(list(
   html$div(list(
     html$p("Select the year range for the below plots:", style = list("color" = "#888888")),
     dccRangeSlider(min = min(all_years), max = max(all_years), step = 1,
-                   value = c(min(all_years), max(all_years)),
+                   value = c(1970, 2010),
                    tooltip = list("placement" = "top", "always_visible" = FALSE),
                    marks = slider_marks,
                    id = "tab2-year-slider"),
-    dccGraph(id = "tab2-lineplot-fossil"),
-    dccGraph(id = "tab2-lineplot-nuclear"),
-    dccGraph(id = "tab2-lineplot-renewable")
+	htmlBr(),	
+	dbcCard(list(
+            dbcCardHeader("Fossil fuel usage", 
+                style=list("fontWeight"="bold", "color"="white", "font-size"="22px", "backgroundColor"="#3f5cfe", "width"="100%", "height"="50px")),
+            dbcCardBody(list(
+                    dccGraph(id="tab2-lineplot-fossil")
+                ), 
+                    style=list("border-width"=0, "width"="100%")
+                )
+        )),
+	htmlBr(),	
+
+	dbcCard(list(
+            dbcCardHeader("Nuclear power usage", 
+                style=list("fontWeight"="bold", "color"="white", "font-size"="22px", "backgroundColor"="#43aeff", "width"="100%", "height"="50px")),
+            dbcCardBody(list(
+                    dccGraph(id="tab2-lineplot-nuclear")
+                ), 
+                    style=list("border-width"=0, "width"="100%")
+                )
+        )),
+	htmlBr(),
+	
+	dbcCard(list(
+		dbcCardHeader("Renewable energy usage", 
+			style=list("fontWeight"="bold", "color"="white", "font-size"="22px", "backgroundColor"="#3dbc77", "width"="100%", "height"="50px")),
+		dbcCardBody(list(
+				dccGraph(id="tab2-lineplot-renewable")
+			), 
+				style=list("border-width"=0, "width"="100%")
+			)
+	))
+
   ), style = list("padding-top" = "30px"))
 ))
 
@@ -357,8 +387,8 @@ app$callback(
 
     graph <- ggplot(data_use, aes(x = Year, y = Fossil, color = Entity)) +
       geom_line() +
-      labs(title = paste("Fossil fuels usage from", years[1], "to", years[2]),
-           y = "Fossil fuel Usage (%)")
+      labs(x = "", y = "Fossil fuel Usage (%)") +
+	  theme(legend.title = element_blank())
 
     ggplotly(graph)
   }
@@ -383,8 +413,8 @@ app$callback(
 
     graph <- ggplot(data_use, aes(x = Year, y = Nuclear, color = Entity)) +
       geom_line() +
-      labs(title = paste("Nuclear energy usage from", years[1], "to", years[2]),
-           y = "Nuclear energy Usage (%)")
+      labs(x = "", y = "Nuclear energy Usage (%)") +
+	  theme(legend.title = element_blank())
 
     ggplotly(graph)
   }
@@ -409,9 +439,8 @@ app$callback(
 
     graph <- ggplot(data_use, aes(x = Year, y = Renewables, color = Entity)) +
       geom_line() +
-      labs(title = paste("Renewable energy usage from", years[1], "to", years[2]),
-           y = "Renewable energy Usage (%)")
-
+	  theme(legend.title = element_blank()) +
+      labs(x = "", y = "Renewable energy Usage (%)")	  
     ggplotly(graph)
   }
 )
@@ -514,8 +543,8 @@ app$callback(
 )
 
 
-# app$run_server(host = '0.0.0.0', debug = T) # Temporary for local development, delete this string when app will be deployed in heroku
-app$run_server(host = '0.0.0.0')
+app$run_server(debug = T) # Temporary for local development, delete this string when app will be deployed in heroku
+# app$run_server(host = '0.0.0.0')
 
 
 
