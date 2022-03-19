@@ -100,6 +100,10 @@ sidebar1 <- dbcCol(
         htmlBr(),
 		
 		htmlH5("Map View"),
+		htmlP(
+            "Select a region for map zoom in:",
+            style = list("color" = "#686868", "margin" = 0, "font-size" = "14px"),
+        ),
 		dbcRow(
             dccDropdown(
                 id = "tab1-map-focus",
