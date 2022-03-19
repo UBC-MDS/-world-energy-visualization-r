@@ -403,8 +403,8 @@ app$callback(
 
     graph <- ggplot(data_use, aes(x = Year, y = Fossil, color = Entity)) +
       geom_line() +
-      labs(x = "", y = "Fossil fuel Usage (%)") +
-	  theme(legend.title = element_blank())
+      labs(title = paste("Selected range from", years[1], "to", years[2]),
+	  y = "Fossil fuel Usage (%)")
 
     ggplotly(graph)
   }
@@ -429,8 +429,8 @@ app$callback(
 
     graph <- ggplot(data_use, aes(x = Year, y = Nuclear, color = Entity)) +
       geom_line() +
-      labs(x = "", y = "Nuclear energy Usage (%)") +
-	  theme(legend.title = element_blank())
+      labs(title = paste("Selected range from", years[1], "to", years[2]),
+		y = "Nuclear energy Usage (%)")
 
     ggplotly(graph)
   }
@@ -456,7 +456,8 @@ app$callback(
     graph <- ggplot(data_use, aes(x = Year, y = Renewables, color = Entity)) +
       geom_line() +
 	  theme(legend.title = element_blank()) +
-      labs(x = "", y = "Renewable energy Usage (%)")	  
+      labs(title = paste("Selected range from", years[1], "to", years[2]),
+			y = "Renewable energy Usage (%)")	  
     ggplotly(graph)
   }
 )
@@ -559,8 +560,8 @@ app$callback(
 )
 
 
-# app$run_server(debug = T) # Temporary for local development, delete this string when app will be deployed in heroku
-app$run_server(host = '0.0.0.0')
+app$run_server(debug = T) # Temporary for local development, delete this string when app will be deployed in heroku
+# app$run_server(host = '0.0.0.0')
 
 
 
