@@ -283,7 +283,7 @@ app$callback(
     labs(x="Percentage %",
      y="Country") +
     scale_fill_distiller(palette= "Greens",
-    limits = c(0, 100)) +
+    limits = c(0, 100), direction=1) +
     scale_x_continuous(expand = c(0, 0), limits = c(0, 102)) +
     theme(legend.position="none")
 
