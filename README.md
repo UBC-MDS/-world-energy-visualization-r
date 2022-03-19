@@ -1,7 +1,7 @@
 # World Energy Visualization
 
-Authors: Macy Chan, Philson Chan, Mukund Iyer, Pavel Levchenko
-
+Authors: Macy Chan, Philson Chan, Mukund Iyer, Pavel Levchenko  
+Dashboard link: https://world-energy-visualization-r.herokuapp.com/
 ## Welcome
 
 This dashboard has a goal to provide an easy access to information related to types of energy consumed at every
