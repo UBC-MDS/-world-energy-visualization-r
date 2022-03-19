@@ -98,7 +98,7 @@ sidebar1 <- dbcCol(
             style = list("padding" = 10)
         ),
         htmlBr(),
-		
+
 		htmlH5("Map View"),
 		htmlP(
             "Select a region for map zoom in:",
@@ -107,13 +107,13 @@ sidebar1 <- dbcCol(
 		dbcRow(
             dccDropdown(
                 id = "tab1-map-focus",
-                options = c("World", all_continent),
+                options = c("World", as.character(all_continent)),
 				value="World",
 				clearable=F
             ),
             style = list("padding" = 10)
         ),
-		
+
 		htmlBr(),
         htmlH5(
             "Data sources",
@@ -241,7 +241,7 @@ app$callback(
             zmax = 100
         ) %>%
 		      layout(title = paste("Global", toString(energy_type), "Energy Consumption in", toString(year)),
-			         margin=list("r"=0, "t"=0, "l"=0, "b"=0), 
+			         margin=list("r"=0, "t"=0, "l"=0, "b"=0),
 		             geo = list(showcountries = T,
 		                        center = list("lat" = proj_param[[scope]][1], "lon" = proj_param[[scope]][2]),
 		                        projection = list("scale" = proj_param[[scope]][3])
@@ -344,35 +344,35 @@ tab2_lineplots <- dbcCol(list(
                    tooltip = list("placement" = "top", "always_visible" = FALSE),
                    marks = slider_marks,
                    id = "tab2-year-slider"),
-	htmlBr(),	
+	htmlBr(),
 	dbcCard(list(
-            dbcCardHeader("Fossil fuel usage", 
+            dbcCardHeader("Fossil fuel usage",
                 style=list("fontWeight"="bold", "color"="white", "font-size"="22px", "backgroundColor"="#3f5cfe", "width"="100%", "height"="50px")),
             dbcCardBody(list(
                     dccGraph(id="tab2-lineplot-fossil")
-                ), 
-                    style=list("border-width"=0, "width"="100%")
-                )
-        )),
-	htmlBr(),	
-
-	dbcCard(list(
-            dbcCardHeader("Nuclear power usage", 
-                style=list("fontWeight"="bold", "color"="white", "font-size"="22px", "backgroundColor"="#43aeff", "width"="100%", "height"="50px")),
-            dbcCardBody(list(
-                    dccGraph(id="tab2-lineplot-nuclear")
-                ), 
+                ),
                     style=list("border-width"=0, "width"="100%")
                 )
         )),
 	htmlBr(),
-	
+
 	dbcCard(list(
-		dbcCardHeader("Renewable energy usage", 
+            dbcCardHeader("Nuclear power usage",
+                style=list("fontWeight"="bold", "color"="white", "font-size"="22px", "backgroundColor"="#43aeff", "width"="100%", "height"="50px")),
+            dbcCardBody(list(
+                    dccGraph(id="tab2-lineplot-nuclear")
+                ),
+                    style=list("border-width"=0, "width"="100%")
+                )
+        )),
+	htmlBr(),
+
+	dbcCard(list(
+		dbcCardHeader("Renewable energy usage",
 			style=list("fontWeight"="bold", "color"="white", "font-size"="22px", "backgroundColor"="#3dbc77", "width"="100%", "height"="50px")),
 		dbcCardBody(list(
 				dccGraph(id="tab2-lineplot-renewable")
-			), 
+			),
 				style=list("border-width"=0, "width"="100%")
 			)
 	))
@@ -457,7 +457,7 @@ app$callback(
       geom_line() +
 	  theme(legend.title = element_blank()) +
       labs(title = paste("Selected range from", years[1], "to", years[2]),
-			y = "Renewable energy Usage (%)")	  
+			y = "Renewable energy Usage (%)")
     ggplotly(graph)
   }
 )
