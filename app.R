@@ -560,8 +560,8 @@ app$callback(
 )
 
 
-app$run_server(debug = T) # Temporary for local development, delete this string when app will be deployed in heroku
-# app$run_server(host = '0.0.0.0')
+# app$run_server(debug = T) # Temporary for local development, delete this string when app will be deployed in heroku
+app$run_server(host = '0.0.0.0')
 
 
 
